@@ -331,7 +331,7 @@
   .field label{ display:block; font-size:12.5px; font-weight:700; color:var(--ink-soft); margin-bottom:6px; }
   .field input[type=text], .field input[type=tel], .field textarea, .field select{
     width:100%; border:1.5px solid var(--paper-2); background:var(--field-bg); border-radius:12px; padding:11px 13px;
-    font-family:inherit; font-size:14px; color:var(--ink); outline:none;
+    font-family:inherit; font-size:16px; color:var(--ink); outline:none;
   }
   .field input:focus, .field textarea:focus, .field select:focus{ border-color:var(--chalk-gold); }
   .field textarea{ resize:vertical; min-height:70px; }
@@ -630,7 +630,7 @@
   .hw-grade-row:last-child{ margin-bottom:0; }
   .hw-grade-row.is-off{ opacity:.45; }
   .hw-grade-label{ flex:1; font-size:12.5px; font-weight:600; color:var(--ink); }
-  .hw-grade-input{ width:76px; border:1.5px solid var(--paper-2); border-radius:10px; padding:8px 9px; font-family:inherit; font-size:13px; text-align:center; }
+  .hw-grade-input{ width:76px; border:1.5px solid var(--paper-2); border-radius:10px; padding:8px 9px; font-family:inherit; font-size:16px; text-align:center; }
   .hw-grade-input:focus{ border-color:var(--chalk-gold); outline:none; }
   .hw-grade-toggle{ flex-shrink:0; border:none; border-radius:12px; padding:8px 14px; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; background:var(--paper-2); color:var(--ink-soft); }
   .hw-grade-toggle.on{ background:var(--mint); color:var(--mint-ink); }
@@ -2701,7 +2701,7 @@ function renderHomeworkTab(c){
     ${flyBookHtml}
     <div class="info-card">
       <label style="display:block;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:8px;">${tr('hw_today_label')} (${t.jalaliShort})</label>
-      <textarea id="hw_text" placeholder="${tr('hw_ph')}" style="width:100%;border:1.5px solid var(--paper-2);border-radius:12px;padding:11px 13px;font-family:inherit;font-size:14px;min-height:70px;">${escapeHtml(today.text||'')}</textarea>
+      <textarea id="hw_text" placeholder="${tr('hw_ph')}" style="width:100%;border:1.5px solid var(--paper-2);border-radius:12px;padding:11px 13px;font-family:inherit;font-size:16px;min-height:70px;">${escapeHtml(today.text||'')}</textarea>
       <div style="display:flex;gap:8px;margin-top:10px;">
         <button class="btn btn-gold btn-sm" style="flex:1;" onclick="saveHomeworkText('${c.id}')">${tr('btn_save_hw')}</button>
         <button class="btn btn-sm hw-copy-btn" title="${tr('btn_copy_hw')}" style="width:42px;flex:0 0 42px;display:flex;align-items:center;justify-content:center;background:var(--paper-2);color:var(--ink);" onclick="copyHomeworkText()">${ICON.copy}</button>
