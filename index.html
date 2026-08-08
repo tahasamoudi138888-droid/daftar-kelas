@@ -433,102 +433,6 @@
   .swipe-enter-next{ animation:swipeEnterFromRight .3s cubic-bezier(.22,.61,.36,1) both; }
   .swipe-enter-prev{ animation:swipeEnterFromLeft .3s cubic-bezier(.22,.61,.36,1) both; }
 
-  /* ===== flying book (homework tab entrance) ===== */
-  .hw-fly-book{
-    position:absolute; top:38%; right:-10px; margin-right:-27px; z-index:600;
-    width:54px; height:58px; color:var(--chalk-gold);
-    filter:drop-shadow(0 8px 14px rgba(0,0,0,.3));
-    pointer-events:none; will-change:transform,opacity;
-  }
-  .hw-fly-book svg{ width:100%; height:100%; }
-  .hw-fly-book-inner{ display:block; width:100%; height:100%; transform-origin:50% 50%; animation:bookFlap .5s ease-in-out infinite; }
-  @keyframes bookFlap{
-    0%,100%{ transform:scaleX(1); }
-    50%{ transform:scaleX(.55); }
-  }
-  @keyframes hwFly1{
-    0%{ transform:translate(0,0) rotate(0deg) scale(1); opacity:0; }
-    10%{ opacity:1; }
-    50%{ transform:translate(-280px,-78px) rotate(-5deg) scale(1); }
-    90%{ opacity:1; }
-    100%{ transform:translate(-560px,0) rotate(-7deg) scale(1); opacity:0; }
-  }
-  @keyframes hwFly2{
-    0%{ transform:translate(0,0) rotate(3deg) scale(.95); opacity:0; }
-    12%{ opacity:1; }
-    50%{ transform:translate(-280px,-92px) rotate(-3deg) scale(.95); }
-    90%{ opacity:1; }
-    100%{ transform:translate(-560px,4px) rotate(-6deg) scale(.95); opacity:0; }
-  }
-  @keyframes hwFly3{
-    0%{ transform:translate(0,10px) rotate(-3deg) scale(1); opacity:0; }
-    10%{ opacity:1; }
-    50%{ transform:translate(-280px,-64px) rotate(3deg) scale(1); }
-    90%{ opacity:1; }
-    100%{ transform:translate(-560px,6px) rotate(-4deg) scale(1); opacity:0; }
-  }
-  @keyframes hwFly4{
-    0%{ transform:translate(0,6px) rotate(2deg) scale(1); opacity:0; }
-    10%{ opacity:1; }
-    50%{ transform:translate(-280px,-82px) rotate(-4deg) scale(1); }
-    90%{ opacity:1; }
-    100%{ transform:translate(-560px,0) rotate(-5deg) scale(1); opacity:0; }
-  }
-  @keyframes hwFly5{
-    0%{ transform:translate(0,-8px) rotate(-2deg) scale(1); opacity:0; }
-    10%{ opacity:1; }
-    50%{ transform:translate(-280px,-96px) rotate(4deg) scale(1); }
-    90%{ opacity:1; }
-    100%{ transform:translate(-560px,2px) rotate(-6deg) scale(1); opacity:0; }
-  }
-  @keyframes hwFly6{
-    0%{ transform:translate(0,0) rotate(0deg) scale(.85); opacity:0; }
-    15%{ opacity:1; transform:translate(-70px,-24px) rotate(-2deg) scale(1); }
-    50%{ transform:translate(-280px,-80px) rotate(-1deg) scale(1); }
-    90%{ opacity:1; }
-    100%{ transform:translate(-560px,4px) rotate(-5deg) scale(.9); opacity:0; }
-  }
-  @keyframes hwFly7{
-    0%{ transform:translate(0,4px) rotate(4deg) scale(1); opacity:0; }
-    10%{ opacity:1; }
-    50%{ transform:translate(-280px,-70px) rotate(-3deg) scale(1); }
-    90%{ opacity:1; }
-    100%{ transform:translate(-560px,-2px) rotate(-7deg) scale(.95); opacity:0; }
-  }
-  @keyframes hwFly8{
-    0%{ transform:translate(0,-6px) rotate(-3deg) scale(1); opacity:0; }
-    10%{ opacity:1; }
-    50%{ transform:translate(-280px,-88px) rotate(3deg) scale(1); }
-    90%{ opacity:1; }
-    100%{ transform:translate(-560px,2px) rotate(-6deg) scale(1); opacity:0; }
-  }
-  /* pause variants — the book stops for a beat in the middle of the screen */
-  @keyframes hwFly9{
-    0%{ transform:translate(0,0) rotate(0deg) scale(1); opacity:0; }
-    10%{ opacity:1; }
-    38%{ transform:translate(-280px,-80px) rotate(-4deg) scale(1); }
-    58%{ transform:translate(-280px,-80px) rotate(-4deg) scale(1); }
-    92%{ opacity:1; }
-    100%{ transform:translate(-560px,4px) rotate(-7deg) scale(1); opacity:0; }
-  }
-  @keyframes hwFly10{
-    0%{ transform:translate(0,8px) rotate(3deg) scale(1); opacity:0; }
-    10%{ opacity:1; }
-    40%{ transform:translate(-280px,-70px) rotate(2deg) scale(1); }
-    62%{ transform:translate(-280px,-70px) rotate(2deg) scale(1); }
-    92%{ opacity:1; }
-    100%{ transform:translate(-560px,0) rotate(-6deg) scale(1); opacity:0; }
-  }
-  .hw-fly-1{ animation:hwFly1 2s ease-in-out both; }
-  .hw-fly-2{ animation:hwFly2 2.1s ease-in-out both; }
-  .hw-fly-3{ animation:hwFly3 2s ease-in-out both; }
-  .hw-fly-4{ animation:hwFly4 2.15s ease-in-out both; }
-  .hw-fly-5{ animation:hwFly5 2.1s ease-in-out both; }
-  .hw-fly-6{ animation:hwFly6 1.95s ease-in-out both; }
-  .hw-fly-7{ animation:hwFly7 2.1s ease-in-out both; }
-  .hw-fly-8{ animation:hwFly8 2.05s ease-in-out both; }
-  .hw-fly-9{ animation:hwFly9 2.7s ease-in-out both; }
-  .hw-fly-10{ animation:hwFly10 2.7s ease-in-out both; }
   .cal-weekdays{ display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--paper-2); }
   .cal-weekdays span{ text-align:center; font-size:10.5px; font-weight:700; color:var(--ink-soft); }
   .cal-weekdays span.fri{ color:var(--coral); }
@@ -1367,19 +1271,8 @@ const state = {
   calGY:null,
   calGM:null,
   calAnimDir:null,
-  calTab:'calendar',
-  hwFlyActive:false,
-  hwFlyVariant:1
+  calTab:'calendar'
 };
-
-const HW_FLY_VARIANTS = 10;
-let lastHwFlyVariant = null;
-function pickHwFlyVariant(){
-  let v;
-  do { v = 1 + Math.floor(Math.random()*HW_FLY_VARIANTS); } while (v===lastHwFlyVariant && HW_FLY_VARIANTS>1);
-  lastHwFlyVariant = v;
-  return v;
-}
 
 const FOLDER_COLORS = ['#e7b94e','#7cc9a0','#e2785f','#7fb2c9','#c99ee2','#e29ecb'];
 function colorForIndex(i){ return FOLDER_COLORS[i % FOLDER_COLORS.length]; }
@@ -2557,10 +2450,6 @@ function renderClassScreen(){
   return tabs + body;
 }
 function setClassTab(t){
-  if (t==='homework' && state.classTab!=='homework'){
-    state.hwFlyActive = true;
-    state.hwFlyVariant = pickHwFlyVariant();
-  }
   state.classTab=t;
   render();
 }
@@ -2691,14 +2580,7 @@ function renderHomeworkTab(c){
       <div class="htime">${isoToJalali(iso)}</div>
     </div>`).join('');
 
-  let flyBookHtml = '';
-  if (state.hwFlyActive){
-    flyBookHtml = `<div class="hw-fly-book hw-fly-${state.hwFlyVariant}"><span class="hw-fly-book-inner">${ICON.book}</span></div>`;
-    state.hwFlyActive = false;
-  }
-
   return `
-    ${flyBookHtml}
     <div class="info-card">
       <label style="display:block;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:8px;">${tr('hw_today_label')} (${t.jalaliShort})</label>
       <textarea id="hw_text" placeholder="${tr('hw_ph')}" style="width:100%;border:1.5px solid var(--paper-2);border-radius:12px;padding:11px 13px;font-family:inherit;font-size:16px;min-height:70px;">${escapeHtml(today.text||'')}</textarea>
