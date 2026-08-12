@@ -855,10 +855,11 @@ if ('serviceWorker' in navigator) {
   .auth-logo{
     width:60px; height:60px; margin:0 auto 14px; border-radius:18px;
     background:linear-gradient(145deg, var(--chalk-gold,#e7b94e), #d9a638);
-    display:flex; align-items:center; justify-content:center; font-size:28px;
+    display:flex; align-items:center; justify-content:center;
     box-shadow:0 8px 20px -6px rgba(231,185,78,.6);
-    position:relative;
+    position:relative; overflow:hidden;
   }
+  .auth-logo img{ width:74%; height:74%; object-fit:contain; }
   .auth-logo::after{
     content:''; position:absolute; inset:-6px; border-radius:22px;
     border:2px solid rgba(231,185,78,.35); animation:authGlowPulse 2.4s ease-in-out infinite;
@@ -866,7 +867,7 @@ if ('serviceWorker' in navigator) {
   .auth-title{ font-size:19px; font-weight:800; color:var(--ink,#2c2013); margin-bottom:4px; }
   .auth-subtitle{ font-size:12.5px; color:var(--ink-soft,#5a4d3c); margin-bottom:20px; }
 
-  .auth-tabs{ display:flex; background:var(--paper-2,#f1e8d3); border-radius:14px; padding:4px; margin-bottom:20px; position:relative; }
+  .auth-tabs{ display:flex; background:var(--paper-2,#f1e8d3); border-radius:14px; padding:4px; margin-bottom:20px; position:relative; overflow:hidden; }
   .auth-tab{
     flex:1; padding:10px 0; font-family:inherit; font-size:13.5px; font-weight:700; border:none; background:transparent;
     color:var(--ink-soft,#5a4d3c); cursor:pointer; border-radius:11px; position:relative; z-index:2;
@@ -874,12 +875,11 @@ if ('serviceWorker' in navigator) {
   }
   .auth-tab.active{ color:var(--chalk-gold-ink,#3a2a08); }
   .auth-tab-slider{
-    position:absolute; top:4px; bottom:4px; width:calc(50% - 4px); border-radius:11px;
+    position:absolute; top:4px; bottom:4px; right:4px; width:calc(50% - 4px); border-radius:11px;
     background:var(--paper,#fffdf7); box-shadow:0 3px 10px rgba(0,0,0,.12);
     transition:transform .32s cubic-bezier(.2,.9,.25,1); z-index:1;
   }
-  .auth-tab-slider.signup{ transform:translateX(calc(-100% - 0px)); }
-  html[dir="rtl"] .auth-tab-slider.signup{ transform:translateX(calc(100% + 0px)); }
+  .auth-tab-slider.signup{ transform:translateX(calc(-100%)); }
 
   .auth-field{ position:relative; margin-bottom:14px; text-align:right; }
   .auth-field input{
@@ -888,6 +888,7 @@ if ('serviceWorker' in navigator) {
     outline:none; transition:border-color .2s ease, box-shadow .2s ease;
   }
   .auth-field input:focus{ border-color:var(--chalk-gold,#e7b94e); box-shadow:0 0 0 4px rgba(231,185,78,.18); }
+  .auth-field input::placeholder{ color:var(--ink-soft,#5a4d3c); opacity:.75; }
   .auth-field label{ display:block; font-size:11.5px; font-weight:700; color:var(--ink-soft,#5a4d3c); margin-bottom:5px; padding-right:2px; }
 
   .auth-panel{ display:none; }
@@ -931,7 +932,7 @@ if ('serviceWorker' in navigator) {
   <div class="auth-blob b3"></div>
 
   <div class="auth-card" id="authCard">
-    <div class="auth-logo">📘</div>
+    <div class="auth-logo"><img src="icon-192.png" alt="دفتر کلاس"></div>
     <div class="auth-title">دفتر کلاس</div>
     <div class="auth-subtitle">برای ادامه وارد شوید یا حساب بسازید</div>
 
@@ -990,8 +991,12 @@ if ('serviceWorker' in navigator) {
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
     getAuth, onAuthStateChanged,
-    signInWithEmailAndPassword, createUserWithEmailAndPassword
+    signInWithEmailAndPassword, createUserWithEmailAndPassword,
+    updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDMwY_Kqm-iXudMfT_kSCxgG4F2KZnKvRs",
@@ -1005,7 +1010,110 @@ if ('serviceWorker' in navigator) {
 
   const fbApp = initializeApp(firebaseConfig);
   const auth = getAuth(fbApp);
+  const db = getFirestore(fbApp);
   window.dkAuth = auth; // در دسترس بقیه‌ی اسکریپت‌های اپ هم باشد
+
+  const IDB_NAME = 'teacher-app-db';
+  const IDB_STORE = 'kv';
+  const STORE_KEY = 'teacher-app-data-v1';
+
+  function rawIdbGet(key){
+    return new Promise((resolve) => {
+      try{
+        const req = indexedDB.open(IDB_NAME, 1);
+        req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(IDB_STORE)) req.result.createObjectStore(IDB_STORE); };
+        req.onsuccess = () => {
+          const tx = req.result.transaction(IDB_STORE, 'readonly');
+          const r = tx.objectStore(IDB_STORE).get(key);
+          r.onsuccess = () => resolve(r.result == null ? null : r.result);
+          r.onerror = () => resolve(null);
+        };
+        req.onerror = () => resolve(null);
+      }catch(e){ resolve(null); }
+    });
+  }
+  function rawIdbSet(key, val){
+    return new Promise((resolve) => {
+      try{
+        const req = indexedDB.open(IDB_NAME, 1);
+        req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(IDB_STORE)) req.result.createObjectStore(IDB_STORE); };
+        req.onsuccess = () => {
+          const tx = req.result.transaction(IDB_STORE, 'readwrite');
+          tx.objectStore(IDB_STORE).put(val, key);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        };
+        req.onerror = () => resolve(false);
+      }catch(e){ resolve(false); }
+    });
+  }
+
+  // تغییر ایمیل/رمز عبور از تنظیمات — نیاز به تأیید مجدد با رمز فعلی دارد (الزام خود Firebase برای عملیات حساس)
+  function translateAccountError(code){
+    const map = {
+      'auth/wrong-password': 'رمز عبور فعلی اشتباه است',
+      'auth/invalid-credential': 'رمز عبور فعلی اشتباه است',
+      'auth/email-already-in-use': 'این ایمیل قبلاً توسط یک حساب دیگر استفاده شده',
+      'auth/invalid-email': 'ایمیل وارد شده معتبر نیست',
+      'auth/weak-password': 'رمز عبور جدید باید حداقل ۶ کاراکتر باشد',
+      'auth/requires-recent-login': 'برای امنیت بیشتر، دوباره وارد اپ شوید و امتحان کنید',
+      'auth/network-request-failed': 'اتصال اینترنت برقرار نیست'
+    };
+    return map[code] || 'خطایی پیش آمد، دوباره تلاش کنید';
+  }
+  window.dkAccountUpdate = async function(currentPassword, newEmail, newPassword){
+    const user = auth.currentUser;
+    if (!user) throw new Error('ابتدا وارد حساب کاربری خود شوید');
+    try{
+      const cred = EmailAuthProvider.credential(user.email, currentPassword);
+      await reauthenticateWithCredential(user, cred);
+    }catch(e){
+      throw new Error(translateAccountError(e.code));
+    }
+    try{
+      if (newEmail && newEmail !== user.email){
+        await updateEmail(user, newEmail);
+      }
+      if (newPassword){
+        await updatePassword(user, newPassword);
+      }
+    }catch(e){
+      throw new Error(translateAccountError(e.code));
+    }
+  };
+
+  // بعد از هر بار saveData() در اسکریپت اصلی اپ صدا زده می‌شود تا دیتا روی ابر هم ذخیره شود
+  let cloudSyncTimer = null;
+  window.dkSyncToCloud = function(jsonString){
+    const user = auth.currentUser;
+    if (!user) return;
+    clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = setTimeout(() => {
+      setDoc(doc(db, 'users', user.uid), { data: jsonString, updatedAt: Date.now() }).catch(() => {
+        // آفلاین یا خطای موقت؛ دفعه‌ی بعد که saveData صدا زده شود دوباره تلاش می‌شود
+      });
+    }, 900);
+  };
+
+  let cloudPullDone = false;
+  async function pullCloudDataIfNewer(user){
+    if (cloudPullDone) return;
+    cloudPullDone = true;
+    try{
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()){
+        const remote = snap.data();
+        if (remote && typeof remote.data === 'string'){
+          const local = await rawIdbGet(STORE_KEY);
+          if (local !== remote.data){
+            await rawIdbSet(STORE_KEY, remote.data);
+            // چون اپ اصلی از قبل با دیتای قدیمی رندر شده، صفحه را یک‌بار رفرش می‌کنیم تا دیتای ابری بارگذاری شود
+            location.reload();
+          }
+        }
+      }
+    }catch(e){ /* آفلاین بودیم؛ با دیتای محلی موجود ادامه می‌دهیم */ }
+  }
 
   const INVITE_CODE = '159753';
   const authScreen = document.getElementById('authScreen');
@@ -1107,6 +1215,7 @@ if ('serviceWorker' in navigator) {
   onAuthStateChanged(auth, (user) => {
     if (user){
       authScreen.style.display = 'none';
+      pullCloudDataIfNewer(user);
     } else {
       authScreen.style.display = 'flex';
       document.getElementById('loginSubmitBtn').classList.remove('loading');
@@ -1607,7 +1716,9 @@ function migrateData(){
 }
 let saveTimer=null;
 function saveData(){
-  storageSet(STORE_KEY, JSON.stringify(data));
+  const json = JSON.stringify(data);
+  storageSet(STORE_KEY, json);
+  if (window.dkSyncToCloud) window.dkSyncToCloud(json);
 }
 
 /* ============ backup: export / import ============ */
@@ -4155,8 +4266,87 @@ function openSettingsModal(){
       <div class="chev">${ICON.chev}</div>
     </div>
     <input type="file" id="backupImportInput" accept="application/json,.json" style="display:none" onchange="importBackup(this)">
+    <h2 class="section-title" style="color:var(--ink);opacity:.7;">حساب کاربری</h2>
+    <div class="backup-row" onclick="openAccountGateModal()">
+      <div class="theme-icon">${ICON.lock}</div>
+      <div class="theme-texts">
+        <b>تغییر ایمیل یا رمز عبور</b>
+        <span>نیاز به وارد کردن کد دعوت اولیه</span>
+      </div>
+      <div class="chev">${ICON.chev}</div>
+    </div>
   `);
 }
+
+/* ============ account settings: gated by invite code ============ */
+function openAccountGateModal(){
+  openModal(`
+    <div class="modal-close-x" onclick="closeModal()">${ICON.x}</div>
+    <h3 style="margin-bottom:6px;">تأیید هویت</h3>
+    <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:16px;">برای تغییر ایمیل یا رمز عبور، همان کد دعوتی که بار اول برای عضویت وارد کردید را دوباره وارد کنید.</p>
+    <div class="field">
+      <input type="password" inputmode="numeric" id="accGateCode" placeholder="کد دعوت">
+    </div>
+    <div id="accGateError" style="display:none;color:#c0392b;font-size:12.5px;margin-bottom:10px;"></div>
+    <button class="btn btn-gold btn-sm" style="width:100%;" onclick="checkAccountGate()">تأیید و ادامه</button>
+  `);
+  setTimeout(()=>{ const el=document.getElementById('accGateCode'); if(el) el.focus(); }, 50);
+}
+function checkAccountGate(){
+  const val = (document.getElementById('accGateCode').value||'').trim();
+  const err = document.getElementById('accGateError');
+  if (val !== '159753'){
+    err.textContent = 'کد دعوت اشتباه است';
+    err.style.display = 'block';
+    return;
+  }
+  openAccountEditModal();
+}
+function openAccountEditModal(){
+  const currentEmail = (window.dkAuth && window.dkAuth.currentUser) ? window.dkAuth.currentUser.email : '';
+  openModal(`
+    <div class="modal-close-x" onclick="closeModal()">${ICON.x}</div>
+    <h3 style="margin-bottom:14px;">تغییر ایمیل یا رمز عبور</h3>
+    <div class="field">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;">رمز عبور فعلی (برای تأیید)</label>
+      <input type="password" id="accCurrentPass" placeholder="رمز عبور فعلی">
+    </div>
+    <div class="field">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;">ایمیل جدید (اختیاری)</label>
+      <input type="email" id="accNewEmail" placeholder="${escapeAttr(currentEmail)}">
+    </div>
+    <div class="field">
+      <label style="display:block;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;">رمز عبور جدید (اختیاری، حداقل ۶ کاراکتر)</label>
+      <input type="password" id="accNewPass" placeholder="رمز عبور جدید">
+    </div>
+    <div id="accEditError" style="display:none;color:#c0392b;font-size:12.5px;margin-bottom:10px;"></div>
+    <div id="accEditSuccess" style="display:none;color:#1f7a4d;font-size:12.5px;margin-bottom:10px;">با موفقیت به‌روزرسانی شد ✓</div>
+    <button class="btn btn-gold btn-sm" id="accEditSubmitBtn" style="width:100%;" onclick="submitAccountEdit()">ذخیره تغییرات</button>
+  `);
+}
+async function submitAccountEdit(){
+  const btn = document.getElementById('accEditSubmitBtn');
+  const err = document.getElementById('accEditError');
+  const ok = document.getElementById('accEditSuccess');
+  err.style.display = 'none'; ok.style.display = 'none';
+  const currentPass = document.getElementById('accCurrentPass').value;
+  const newEmail = document.getElementById('accNewEmail').value.trim();
+  const newPass = document.getElementById('accNewPass').value;
+  if (!currentPass){ err.textContent = 'رمز عبور فعلی را وارد کنید'; err.style.display='block'; return; }
+  if (!newEmail && !newPass){ err.textContent = 'حداقل یکی از ایمیل یا رمز جدید را وارد کنید'; err.style.display='block'; return; }
+  if (newPass && newPass.length < 6){ err.textContent = 'رمز عبور جدید باید حداقل ۶ کاراکتر باشد'; err.style.display='block'; return; }
+  if (!window.dkAccountUpdate){ err.textContent = 'خطای داخلی، دوباره تلاش کنید'; err.style.display='block'; return; }
+  btn.disabled = true; btn.textContent = 'در حال ذخیره...';
+  try{
+    await window.dkAccountUpdate(currentPass, newEmail, newPass);
+    ok.style.display = 'block';
+    document.getElementById('accCurrentPass').value = '';
+    document.getElementById('accNewPass').value = '';
+  }catch(e){
+    err.textContent = e.message || 'خطایی پیش آمد';
+    err.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = 'ذخیره تغییرات';
 function refreshSettingsModal(){ openSettingsModal(); }
 function openAboutModal(){
   openModal(`
