@@ -797,7 +797,27 @@
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch(() => {});
+    navigator.serviceWorker.register('service-worker.js').then((reg) => {
+      // اگر آنلاین بودیم، بلافاصله چک کن نسخه‌ی جدیدی هست یا نه
+      if (navigator.onLine && reg) {
+        reg.update().catch(() => {});
+      }
+    }).catch(() => {});
+
+    // وقتی نسخه‌ی جدید فعال شد، یک‌بار خودکار صفحه را رفرش کن تا آپدیت اعمال شود
+    let alreadyReloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (alreadyReloaded) return;
+      alreadyReloaded = true;
+      window.location.reload();
+    });
+  });
+
+  // هر بار که اتصال اینترنت وصل شد (مثلاً بعد از قطعی)، دوباره چک کن آپدیت هست یا نه
+  window.addEventListener('online', () => {
+    navigator.serviceWorker.getRegistration().then((reg) => {
+      if (reg) reg.update().catch(() => {});
+    });
   });
 }
 </script>
