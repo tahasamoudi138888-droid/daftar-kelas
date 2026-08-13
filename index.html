@@ -823,408 +823,49 @@ if ('serviceWorker' in navigator) {
 </script>
 </head>
 <body>
-<style>
-  @keyframes authFloat1{0%,100%{transform:translate(0,0) rotate(0deg);}50%{transform:translate(14px,-18px) rotate(8deg);}}
-  @keyframes authFloat2{0%,100%{transform:translate(0,0) rotate(0deg);}50%{transform:translate(-16px,16px) rotate(-6deg);}}
-  @keyframes authFloat3{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(10px,10px) scale(1.08);}}
-  @keyframes authCardIn{from{opacity:0; transform:translateY(28px) scale(.96);}to{opacity:1; transform:translateY(0) scale(1);}}
-  @keyframes authGlowPulse{0%,100%{opacity:.55;}50%{opacity:1;}}
-  @keyframes authSpin{to{transform:rotate(360deg);}}
-  @keyframes authShake{10%,90%{transform:translateX(-2px);}20%,80%{transform:translateX(4px);}30%,50%,70%{transform:translateX(-7px);}40%,60%{transform:translateX(7px);}}
-  @keyframes authErrIn{from{opacity:0; transform:translateY(-6px);}to{opacity:1; transform:translateY(0);}}
-
-  #authScreen{
-    position:fixed; inset:0; z-index:9999; overflow:hidden;
-    display:flex; align-items:center; justify-content:center; padding:20px;
-    background:
-      radial-gradient(ellipse 60% 50% at 20% 10%, rgba(231,185,78,.25) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 50% at 85% 90%, rgba(124,204,160,.18) 0%, transparent 60%),
-      linear-gradient(160deg, #16302a 0%, #1f3a32 55%, #223f36 100%);
-  }
-  .auth-blob{ position:absolute; border-radius:50%; filter:blur(2px); opacity:.5; pointer-events:none; }
-  .auth-blob.b1{ width:190px; height:190px; top:8%; left:-40px; background:radial-gradient(circle at 35% 35%, #e7b94e, transparent 70%); animation:authFloat1 9s ease-in-out infinite; }
-  .auth-blob.b2{ width:150px; height:150px; bottom:10%; right:-30px; background:radial-gradient(circle at 35% 35%, #7cccA0, transparent 70%); animation:authFloat2 11s ease-in-out infinite; }
-  .auth-blob.b3{ width:90px; height:90px; top:60%; left:8%; background:radial-gradient(circle at 35% 35%, #f7f1e3, transparent 70%); animation:authFloat3 7s ease-in-out infinite; opacity:.18; }
-
-  .auth-card{
-    position:relative; width:100%; max-width:380px; background:var(--paper,#fffdf7);
-    border-radius:26px; padding:30px 24px 26px; text-align:center;
-    box-shadow:0 25px 60px -12px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.06);
-    animation:authCardIn .55s cubic-bezier(.2,.9,.25,1) both;
-  }
-  .auth-logo{
-    width:60px; height:60px; margin:0 auto 14px; border-radius:18px;
-    background:linear-gradient(145deg, var(--chalk-gold,#e7b94e), #d9a638);
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:0 8px 20px -6px rgba(231,185,78,.6);
-    position:relative; overflow:hidden;
-  }
-  .auth-logo img{ width:74%; height:74%; object-fit:contain; }
-  .auth-logo::after{
-    content:''; position:absolute; inset:-6px; border-radius:22px;
-    border:2px solid rgba(231,185,78,.35); animation:authGlowPulse 2.4s ease-in-out infinite;
-  }
-  .auth-title{ font-size:19px; font-weight:800; color:var(--ink,#2c2013); margin-bottom:4px; }
-  .auth-subtitle{ font-size:12.5px; color:var(--ink-soft,#5a4d3c); margin-bottom:20px; }
-
-  .auth-tabs{ display:flex; background:var(--paper-2,#f1e8d3); border-radius:14px; padding:4px; margin-bottom:20px; position:relative; overflow:hidden; }
-  .auth-tab{
-    flex:1; padding:10px 0; font-family:inherit; font-size:13.5px; font-weight:700; border:none; background:transparent;
-    color:var(--ink-soft,#5a4d3c); cursor:pointer; border-radius:11px; position:relative; z-index:2;
-    transition:color .25s ease;
-  }
-  .auth-tab.active{ color:var(--chalk-gold-ink,#3a2a08); }
-  .auth-tab-slider{
-    position:absolute; top:4px; bottom:4px; right:4px; width:calc(50% - 4px); border-radius:11px;
-    background:var(--paper,#fffdf7); box-shadow:0 3px 10px rgba(0,0,0,.12);
-    transition:transform .32s cubic-bezier(.2,.9,.25,1); z-index:1;
-  }
-  .auth-tab-slider.signup{ transform:translateX(calc(-100%)); }
-
-  .auth-field{ position:relative; margin-bottom:14px; text-align:right; }
-  .auth-field input{
-    width:100%; box-sizing:border-box; border:1.5px solid var(--paper-2,#f1e8d3); background:var(--field-bg,#fff);
-    border-radius:13px; padding:13px 14px; font-family:inherit; font-size:15px; color:var(--ink,#2c2013);
-    outline:none; transition:border-color .2s ease, box-shadow .2s ease;
-  }
-  .auth-field input:focus{ border-color:var(--chalk-gold,#e7b94e); box-shadow:0 0 0 4px rgba(231,185,78,.18); }
-  .auth-field input::placeholder{ color:var(--ink-soft,#5a4d3c); opacity:.75; }
-  .auth-field label{ display:block; font-size:11.5px; font-weight:700; color:var(--ink-soft,#5a4d3c); margin-bottom:5px; padding-right:2px; }
-
-  .auth-panel{ display:none; }
-  .auth-panel.active{ display:block; animation:authErrIn .3s ease; }
-
-  .auth-error{
-    display:none; background:#fdeceb; color:#c0392b; font-size:12.5px; font-weight:700; border-radius:11px;
-    padding:10px 12px; margin-bottom:14px; animation:authErrIn .25s ease;
-  }
-  .auth-error.show{ display:block; }
-  .auth-card.shake{ animation:authShake .5s; }
-
-  .auth-submit{
-    width:100%; border:none; border-radius:13px; padding:14px; font-family:inherit; font-size:14.5px; font-weight:800;
-    background:linear-gradient(145deg, var(--chalk-gold,#e7b94e), #d9a638); color:var(--chalk-gold-ink,#3a2a08);
-    cursor:pointer; position:relative; overflow:hidden; transition:transform .15s ease, box-shadow .2s ease;
-    box-shadow:0 10px 22px -8px rgba(231,185,78,.55);
-  }
-  .auth-submit:active{ transform:scale(.97); }
-  .auth-submit[disabled]{ opacity:.7; cursor:default; }
-  .auth-spinner{
-    display:none; width:16px; height:16px; border:2.5px solid rgba(58,42,8,.25); border-top-color:var(--chalk-gold-ink,#3a2a08);
-    border-radius:50%; animation:authSpin .7s linear infinite; margin:0 auto;
-  }
-  .auth-submit.loading .auth-label{ display:none; }
-  .auth-submit.loading .auth-spinner{ display:block; }
-
-  .auth-footer{
-    font-size:11px; color:var(--ink-soft,#5a4d3c); line-height:1.9; margin-top:18px; padding-top:14px;
-    border-top:1px dashed var(--board-line,#d9c9a0);
-  }
-  .auth-footer a{
-    display:inline-block; margin-top:6px; font-weight:800; color:var(--ink,#2c2013); text-decoration:none;
-    background:var(--paper-2,#f1e8d3); padding:8px 16px; border-radius:20px; transition:background .2s ease;
-  }
-  .auth-footer a:hover{ background:var(--chalk-gold,#e7b94e); }
-</style>
-<div id="authScreen">
-  <div class="auth-blob b1"></div>
-  <div class="auth-blob b2"></div>
-  <div class="auth-blob b3"></div>
-
-  <div class="auth-card" id="authCard">
-    <div class="auth-logo"><img src="icon-192.png" alt="دفتر کلاس"></div>
-    <div class="auth-title">دفتر کلاس</div>
-    <div class="auth-subtitle">برای ادامه وارد شوید یا حساب بسازید</div>
-
-    <div class="auth-tabs">
-      <div class="auth-tab-slider" id="authTabSlider"></div>
-      <button type="button" class="auth-tab active" id="tabLoginBtn">ورود</button>
-      <button type="button" class="auth-tab" id="tabSignupBtn">عضویت</button>
+<div id="lockScreen" style="position:fixed;inset:0;z-index:9999;background:var(--slate,#1f3a32);display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div style="width:100%;max-width:340px;background:var(--paper,#fffdf7);border-radius:20px;padding:28px 22px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.35);">
+    <div style="width:60px;height:60px;margin:0 auto 14px;border-radius:18px;background:linear-gradient(145deg, var(--chalk-gold,#e7b94e), #d9a638);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 8px 20px -6px rgba(231,185,78,.6);">
+      <img src="icon-192.png" alt="دفتر کلاس" style="width:74%;height:74%;object-fit:contain;">
     </div>
-
-    <div class="auth-error" id="authError"></div>
-
-    <!-- ورود -->
-    <div class="auth-panel active" id="panelLogin">
-      <div class="auth-field">
-        <label>ایمیل</label>
-        <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
-      </div>
-      <div class="auth-field">
-        <label>رمز عبور</label>
-        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
-      </div>
-      <button type="button" class="auth-submit" id="loginSubmitBtn">
-        <span class="auth-label">ورود به دفتر کلاس</span>
-        <span class="auth-spinner"></span>
-      </button>
-    </div>
-
-    <!-- عضویت -->
-    <div class="auth-panel" id="panelSignup">
-      <div class="auth-field">
-        <label>ایمیل</label>
-        <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email">
-      </div>
-      <div class="auth-field">
-        <label>رمز عبور (حداقل ۶ کاراکتر)</label>
-        <input type="password" id="signupPassword" placeholder="••••••••" autocomplete="new-password">
-      </div>
-      <div class="auth-field">
-        <label>کد دعوت</label>
-        <input type="password" inputmode="numeric" id="signupInvite" placeholder="کد دعوتی که دریافت کردید">
-      </div>
-      <button type="button" class="auth-submit" id="signupSubmitBtn">
-        <span class="auth-label">ساخت حساب کاربری</span>
-        <span class="auth-spinner"></span>
-      </button>
-    </div>
-
-    <div class="auth-footer">
-      برای دریافت کد دعوت، به آیدی زیر در بله پیام بدید:
-      <br>
-      <a href="https://ble.ir/taha_samoudi" target="_blank" rel="noopener">@taha_samoudi</a>
+    <div style="font-size:15px;font-weight:800;color:var(--ink,#2c2013);margin-bottom:6px;">دفتر کلاس</div>
+    <div style="font-size:13px;color:var(--ink-soft,#5a4d3c);margin-bottom:18px;">برای ورود، رمز عبور را وارد کنید</div>
+    <input id="lockPassInput" type="password" inputmode="numeric" placeholder="رمز عبور" style="width:100%;box-sizing:border-box;border:1.5px solid var(--paper-2,#f1e8d3);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:16px;text-align:center;outline:none;margin-bottom:10px;">
+    <div id="lockErrorMsg" style="display:none;color:#c0392b;font-size:12px;margin-bottom:10px;">رمز اشتباه است</div>
+    <button id="lockSubmitBtn" style="width:100%;border:none;border-radius:12px;padding:12px;font-family:inherit;font-size:14px;font-weight:800;background:var(--chalk-gold,#e7b94e);color:var(--chalk-gold-ink,#3a2a08);cursor:pointer;">ورود</button>
+    <div style="font-size:11px;color:var(--ink-soft,#5a4d3c);line-height:1.9;margin-top:16px;padding-top:14px;border-top:1px dashed var(--board-line,#d9c9a0);">
+      برای گرفتن رمز، به آیدی زیر در بله پیام بدید:<br>
+      <a href="https://ble.ir/taha_samoudi" target="_blank" rel="noopener" style="display:inline-block;margin-top:6px;font-weight:800;color:var(--ink,#2c2013);text-decoration:none;background:var(--paper-2,#f1e8d3);padding:8px 16px;border-radius:20px;">@taha_samoudi</a>
     </div>
   </div>
 </div>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import {
-    getAuth, onAuthStateChanged,
-    signInWithEmailAndPassword, createUserWithEmailAndPassword,
-    updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import {
-    getFirestore, doc, getDoc, setDoc
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDMwY_Kqm-iXudMfT_kSCxgG4F2KZnKvRs",
-    authDomain: "daftar-class-d5662.firebaseapp.com",
-    projectId: "daftar-class-d5662",
-    storageBucket: "daftar-class-d5662.firebasestorage.app",
-    messagingSenderId: "512060090907",
-    appId: "1:512060090907:web:89024fc7c50ce1755fa6be",
-    measurementId: "G-SY3KCZG7E0"
-  };
-
-  const fbApp = initializeApp(firebaseConfig);
-  const auth = getAuth(fbApp);
-  const db = getFirestore(fbApp);
-  window.dkAuth = auth; // در دسترس بقیه‌ی اسکریپت‌های اپ هم باشد
-
-  const IDB_NAME = 'teacher-app-db';
-  const IDB_STORE = 'kv';
-  const STORE_KEY = 'teacher-app-data-v1';
-
-  function rawIdbGet(key){
-    return new Promise((resolve) => {
-      try{
-        const req = indexedDB.open(IDB_NAME, 1);
-        req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(IDB_STORE)) req.result.createObjectStore(IDB_STORE); };
-        req.onsuccess = () => {
-          const tx = req.result.transaction(IDB_STORE, 'readonly');
-          const r = tx.objectStore(IDB_STORE).get(key);
-          r.onsuccess = () => resolve(r.result == null ? null : r.result);
-          r.onerror = () => resolve(null);
-        };
-        req.onerror = () => resolve(null);
-      }catch(e){ resolve(null); }
+<script>
+(function(){
+  var CORRECT_PASS = '159753';
+  var storedOk = false;
+  try { storedOk = localStorage.getItem('dk_unlocked') === 'yes'; } catch(e){}
+  var lock = document.getElementById('lockScreen');
+  if (storedOk){
+    lock.style.display = 'none';
+  } else {
+    document.getElementById('lockSubmitBtn').addEventListener('click', tryUnlock);
+    document.getElementById('lockPassInput').addEventListener('keydown', function(e){
+      if (e.key === 'Enter') tryUnlock();
     });
   }
-  function rawIdbSet(key, val){
-    return new Promise((resolve) => {
-      try{
-        const req = indexedDB.open(IDB_NAME, 1);
-        req.onupgradeneeded = () => { if (!req.result.objectStoreNames.contains(IDB_STORE)) req.result.createObjectStore(IDB_STORE); };
-        req.onsuccess = () => {
-          const tx = req.result.transaction(IDB_STORE, 'readwrite');
-          tx.objectStore(IDB_STORE).put(val, key);
-          tx.oncomplete = () => resolve(true);
-          tx.onerror = () => resolve(false);
-        };
-        req.onerror = () => resolve(false);
-      }catch(e){ resolve(false); }
-    });
-  }
-
-  // تغییر ایمیل/رمز عبور از تنظیمات — نیاز به تأیید مجدد با رمز فعلی دارد (الزام خود Firebase برای عملیات حساس)
-  function translateAccountError(code){
-    const map = {
-      'auth/wrong-password': 'رمز عبور فعلی اشتباه است',
-      'auth/invalid-credential': 'رمز عبور فعلی اشتباه است',
-      'auth/email-already-in-use': 'این ایمیل قبلاً توسط یک حساب دیگر استفاده شده',
-      'auth/invalid-email': 'ایمیل وارد شده معتبر نیست',
-      'auth/weak-password': 'رمز عبور جدید باید حداقل ۶ کاراکتر باشد',
-      'auth/requires-recent-login': 'برای امنیت بیشتر، دوباره وارد اپ شوید و امتحان کنید',
-      'auth/network-request-failed': 'اتصال اینترنت برقرار نیست'
-    };
-    return map[code] || 'خطایی پیش آمد، دوباره تلاش کنید';
-  }
-  window.dkAccountUpdate = async function(currentPassword, newEmail, newPassword){
-    const user = auth.currentUser;
-    if (!user) throw new Error('ابتدا وارد حساب کاربری خود شوید');
-    try{
-      const cred = EmailAuthProvider.credential(user.email, currentPassword);
-      await reauthenticateWithCredential(user, cred);
-    }catch(e){
-      throw new Error(translateAccountError(e.code));
-    }
-    try{
-      if (newEmail && newEmail !== user.email){
-        await updateEmail(user, newEmail);
-      }
-      if (newPassword){
-        await updatePassword(user, newPassword);
-      }
-    }catch(e){
-      throw new Error(translateAccountError(e.code));
-    }
-  };
-
-  // بعد از هر بار saveData() در اسکریپت اصلی اپ صدا زده می‌شود تا دیتا روی ابر هم ذخیره شود
-  let cloudSyncTimer = null;
-  window.dkSyncToCloud = function(jsonString){
-    const user = auth.currentUser;
-    if (!user) return;
-    clearTimeout(cloudSyncTimer);
-    cloudSyncTimer = setTimeout(() => {
-      setDoc(doc(db, 'users', user.uid), { data: jsonString, updatedAt: Date.now() }).catch(() => {
-        // آفلاین یا خطای موقت؛ دفعه‌ی بعد که saveData صدا زده شود دوباره تلاش می‌شود
-      });
-    }, 900);
-  };
-
-  let cloudPullDone = false;
-  async function pullCloudDataIfNewer(user){
-    if (cloudPullDone) return;
-    cloudPullDone = true;
-    try{
-      const snap = await getDoc(doc(db, 'users', user.uid));
-      if (snap.exists()){
-        const remote = snap.data();
-        if (remote && typeof remote.data === 'string'){
-          const local = await rawIdbGet(STORE_KEY);
-          if (local !== remote.data){
-            await rawIdbSet(STORE_KEY, remote.data);
-            // چون اپ اصلی از قبل با دیتای قدیمی رندر شده، صفحه را یک‌بار رفرش می‌کنیم تا دیتای ابری بارگذاری شود
-            location.reload();
-          }
-        }
-      }
-    }catch(e){ /* آفلاین بودیم؛ با دیتای محلی موجود ادامه می‌دهیم */ }
-  }
-
-  const INVITE_CODE = '159753';
-  const authScreen = document.getElementById('authScreen');
-  const authCard = document.getElementById('authCard');
-  const authError = document.getElementById('authError');
-
-  // --- tabs ---
-  const tabLogin = document.getElementById('tabLoginBtn');
-  const tabSignup = document.getElementById('tabSignupBtn');
-  const slider = document.getElementById('authTabSlider');
-  const panelLogin = document.getElementById('panelLogin');
-  const panelSignup = document.getElementById('panelSignup');
-
-  tabLogin.addEventListener('click', () => switchTab('login'));
-  tabSignup.addEventListener('click', () => switchTab('signup'));
-
-  function switchTab(which){
-    hideError();
-    if (which === 'login'){
-      tabLogin.classList.add('active'); tabSignup.classList.remove('active');
-      slider.classList.remove('signup');
-      panelLogin.classList.add('active'); panelSignup.classList.remove('active');
+  function tryUnlock(){
+    var val = document.getElementById('lockPassInput').value.trim();
+    var err = document.getElementById('lockErrorMsg');
+    if (val === CORRECT_PASS){
+      try { localStorage.setItem('dk_unlocked','yes'); } catch(e){}
+      lock.style.display = 'none';
     } else {
-      tabSignup.classList.add('active'); tabLogin.classList.remove('active');
-      slider.classList.add('signup');
-      panelSignup.classList.add('active'); panelLogin.classList.remove('active');
+      err.style.display = 'block';
     }
   }
-
-  function showError(msg){
-    authError.textContent = msg;
-    authError.classList.add('show');
-    authCard.classList.remove('shake'); void authCard.offsetWidth; authCard.classList.add('shake');
-  }
-  function hideError(){ authError.classList.remove('show'); }
-
-  function setLoading(btn, isLoading){
-    if (isLoading) btn.classList.add('loading'); else btn.classList.remove('loading');
-    btn.disabled = isLoading;
-  }
-
-  // ترجمه‌ی خطاهای فایربیس به فارسی قابل فهم
-  function translateAuthError(code){
-    const map = {
-      'auth/invalid-email': 'ایمیل وارد شده معتبر نیست',
-      'auth/user-not-found': 'حسابی با این ایمیل پیدا نشد',
-      'auth/wrong-password': 'رمز عبور اشتباه است',
-      'auth/invalid-credential': 'ایمیل یا رمز عبور اشتباه است',
-      'auth/email-already-in-use': 'این ایمیل قبلاً ثبت‌نام کرده — از تب ورود استفاده کنید',
-      'auth/weak-password': 'رمز عبور باید حداقل ۶ کاراکتر باشد',
-      'auth/too-many-requests': 'تعداد تلاش‌ها زیاد بود، کمی صبر کنید',
-      'auth/network-request-failed': 'اتصال اینترنت برقرار نیست'
-    };
-    return map[code] || 'خطایی پیش آمد، دوباره تلاش کنید';
-  }
-
-  // --- ورود ---
-  document.getElementById('loginSubmitBtn').addEventListener('click', () => {
-    const btn = document.getElementById('loginSubmitBtn');
-    const email = document.getElementById('loginEmail').value.trim();
-    const pass = document.getElementById('loginPassword').value;
-    hideError();
-    if (!email || !pass){ showError('ایمیل و رمز عبور را وارد کنید'); return; }
-    setLoading(btn, true);
-    signInWithEmailAndPassword(auth, email, pass)
-      .catch((err) => {
-        setLoading(btn, false);
-        showError(translateAuthError(err.code));
-      });
-    // در صورت موفقیت، onAuthStateChanged پایین صفحه را می‌بندد
-  });
-
-  // --- عضویت ---
-  document.getElementById('signupSubmitBtn').addEventListener('click', () => {
-    const btn = document.getElementById('signupSubmitBtn');
-    const email = document.getElementById('signupEmail').value.trim();
-    const pass = document.getElementById('signupPassword').value;
-    const invite = document.getElementById('signupInvite').value.trim();
-    hideError();
-    if (!email || !pass){ showError('ایمیل و رمز عبور را وارد کنید'); return; }
-    if (pass.length < 6){ showError('رمز عبور باید حداقل ۶ کاراکتر باشد'); return; }
-    if (invite !== INVITE_CODE){ showError('کد دعوت اشتباه است'); return; }
-    setLoading(btn, true);
-    createUserWithEmailAndPassword(auth, email, pass)
-      .catch((err) => {
-        setLoading(btn, false);
-        showError(translateAuthError(err.code));
-      });
-    // در صورت موفقیت، onAuthStateChanged پایین صفحه را می‌بندد
-  });
-
-  [document.getElementById('loginPassword'), document.getElementById('signupInvite')].forEach((el) => {
-    el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') el.closest('.auth-panel').querySelector('.auth-submit').click();
-    });
-  });
-
-  // منبع اصلی تصمیم برای نمایش/عدم‌نمایش صفحه‌ی ورود: خود Firebase
-  onAuthStateChanged(auth, (user) => {
-    if (user){
-      authScreen.style.display = 'none';
-      pullCloudDataIfNewer(user);
-    } else {
-      authScreen.style.display = 'flex';
-      document.getElementById('loginSubmitBtn').classList.remove('loading');
-      document.getElementById('signupSubmitBtn').classList.remove('loading');
-    }
-  });
-
   // auto-refresh every 1 hour
-  setInterval(() => { location.reload(); }, 60*60*1000);
+  setInterval(function(){ location.reload(); }, 60*60*1000);
+})();
 </script>
 <div id="shell">
   <div id="classAlertBadge" class="class-alert-badge" style="display:none;"></div>
@@ -1716,9 +1357,7 @@ function migrateData(){
 }
 let saveTimer=null;
 function saveData(){
-  const json = JSON.stringify(data);
-  storageSet(STORE_KEY, json);
-  if (window.dkSyncToCloud) window.dkSyncToCloud(json);
+  storageSet(STORE_KEY, JSON.stringify(data));
 }
 
 /* ============ backup: export / import ============ */
@@ -4266,87 +3905,9 @@ function openSettingsModal(){
       <div class="chev">${ICON.chev}</div>
     </div>
     <input type="file" id="backupImportInput" accept="application/json,.json" style="display:none" onchange="importBackup(this)">
-    <h2 class="section-title" style="color:var(--ink);opacity:.7;">حساب کاربری</h2>
-    <div class="backup-row" onclick="openAccountGateModal()">
-      <div class="theme-icon">${ICON.lock}</div>
-      <div class="theme-texts">
-        <b>تغییر ایمیل یا رمز عبور</b>
-        <span>نیاز به وارد کردن کد دعوت اولیه</span>
-      </div>
-      <div class="chev">${ICON.chev}</div>
-    </div>
   `);
 }
 
-/* ============ account settings: gated by invite code ============ */
-function openAccountGateModal(){
-  openModal(`
-    <div class="modal-close-x" onclick="closeModal()">${ICON.x}</div>
-    <h3 style="margin-bottom:6px;">تأیید هویت</h3>
-    <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:16px;">برای تغییر ایمیل یا رمز عبور، همان کد دعوتی که بار اول برای عضویت وارد کردید را دوباره وارد کنید.</p>
-    <div class="field">
-      <input type="password" inputmode="numeric" id="accGateCode" placeholder="کد دعوت">
-    </div>
-    <div id="accGateError" style="display:none;color:#c0392b;font-size:12.5px;margin-bottom:10px;"></div>
-    <button class="btn btn-gold btn-sm" style="width:100%;" onclick="checkAccountGate()">تأیید و ادامه</button>
-  `);
-  setTimeout(()=>{ const el=document.getElementById('accGateCode'); if(el) el.focus(); }, 50);
-}
-function checkAccountGate(){
-  const val = (document.getElementById('accGateCode').value||'').trim();
-  const err = document.getElementById('accGateError');
-  if (val !== '159753'){
-    err.textContent = 'کد دعوت اشتباه است';
-    err.style.display = 'block';
-    return;
-  }
-  openAccountEditModal();
-}
-function openAccountEditModal(){
-  const currentEmail = (window.dkAuth && window.dkAuth.currentUser) ? window.dkAuth.currentUser.email : '';
-  openModal(`
-    <div class="modal-close-x" onclick="closeModal()">${ICON.x}</div>
-    <h3 style="margin-bottom:14px;">تغییر ایمیل یا رمز عبور</h3>
-    <div class="field">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;">رمز عبور فعلی (برای تأیید)</label>
-      <input type="password" id="accCurrentPass" placeholder="رمز عبور فعلی">
-    </div>
-    <div class="field">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;">ایمیل جدید (اختیاری)</label>
-      <input type="email" id="accNewEmail" placeholder="${escapeAttr(currentEmail)}">
-    </div>
-    <div class="field">
-      <label style="display:block;font-size:11.5px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;">رمز عبور جدید (اختیاری، حداقل ۶ کاراکتر)</label>
-      <input type="password" id="accNewPass" placeholder="رمز عبور جدید">
-    </div>
-    <div id="accEditError" style="display:none;color:#c0392b;font-size:12.5px;margin-bottom:10px;"></div>
-    <div id="accEditSuccess" style="display:none;color:#1f7a4d;font-size:12.5px;margin-bottom:10px;">با موفقیت به‌روزرسانی شد ✓</div>
-    <button class="btn btn-gold btn-sm" id="accEditSubmitBtn" style="width:100%;" onclick="submitAccountEdit()">ذخیره تغییرات</button>
-  `);
-}
-async function submitAccountEdit(){
-  const btn = document.getElementById('accEditSubmitBtn');
-  const err = document.getElementById('accEditError');
-  const ok = document.getElementById('accEditSuccess');
-  err.style.display = 'none'; ok.style.display = 'none';
-  const currentPass = document.getElementById('accCurrentPass').value;
-  const newEmail = document.getElementById('accNewEmail').value.trim();
-  const newPass = document.getElementById('accNewPass').value;
-  if (!currentPass){ err.textContent = 'رمز عبور فعلی را وارد کنید'; err.style.display='block'; return; }
-  if (!newEmail && !newPass){ err.textContent = 'حداقل یکی از ایمیل یا رمز جدید را وارد کنید'; err.style.display='block'; return; }
-  if (newPass && newPass.length < 6){ err.textContent = 'رمز عبور جدید باید حداقل ۶ کاراکتر باشد'; err.style.display='block'; return; }
-  if (!window.dkAccountUpdate){ err.textContent = 'خطای داخلی، دوباره تلاش کنید'; err.style.display='block'; return; }
-  btn.disabled = true; btn.textContent = 'در حال ذخیره...';
-  try{
-    await window.dkAccountUpdate(currentPass, newEmail, newPass);
-    ok.style.display = 'block';
-    document.getElementById('accCurrentPass').value = '';
-    document.getElementById('accNewPass').value = '';
-  }catch(e){
-    err.textContent = e.message || 'خطایی پیش آمد';
-    err.style.display = 'block';
-  }
-  btn.disabled = false; btn.textContent = 'ذخیره تغییرات';
 function refreshSettingsModal(){ openSettingsModal(); }
 function openAboutModal(){
   openModal(`
