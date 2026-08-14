@@ -3466,10 +3466,11 @@ function haptic(ms){
 
 /* ============ swipe paging (like a phone home-screen) ============ */
 /* برای تقویم (تعویض ماه) و برای انتخابگر روز در یادآوری‌ها (تعویض ماه) */
-function initSwipePaging(rootEl, panelSelector, onSwipe){
+function initSwipePaging(rootEl, panelSelector, onSwipe, guard){
   let sx=0, sy=0, panel=null, locked=null, dragging=false;
   const THRESHOLD = 44;   // حداقل جابه‌جایی افقی (px) برای ثبت سوایپ
   rootEl.addEventListener('touchstart', (e)=>{
+    if (guard && !guard()) return;
     const t = e.target.closest(panelSelector);
     if (!t) return;
     panel = t;
@@ -3494,6 +3495,7 @@ function initSwipePaging(rootEl, panelSelector, onSwipe){
     dragging = false;
     const p = panel; panel = null;
     if (locked!=='x'){ p.style.transform=''; p.style.opacity=''; locked=null; return; }
+    if (guard && !guard()){ p.style.transform=''; p.style.opacity=''; locked=null; return; }
     const touch = (e.changedTouches && e.changedTouches[0]) || {clientX:sx};
     const dx = touch.clientX - sx;
     p.style.transition = 'transform .22s cubic-bezier(.22,.61,.36,1), opacity .22s ease';
@@ -3530,71 +3532,14 @@ function initSwipeNav(){
     const cid = grid ? grid.getAttribute('data-dp-cid') : null;
     if (cid) dpShiftMonth(cid, dir);
   });
-  initScreenSwipeNav();
-}
-/* سوایپ بین صفحه‌ی کلاس‌ها و یادآوری‌ها — درست مثل صفحه‌ی اول گوشی؛
-   از چپ به راست بکشیم روی صفحه‌ی کلاس‌ها -> یادآوری، برعکسش هم برمی‌گرده */
-function initScreenSwipeNav(){
-  const app = document.getElementById('app');
-  let sx=0, sy=0, dragging=false, locked=null, panel=null;
-  const THRESHOLD = 50;
-  function eligible(){
-    return state.screen==='home' || (state.screen==='reminders' && !state.reminderClassId);
-  }
-  app.addEventListener('touchstart', (e)=>{
-    if (!eligible()) { dragging=false; panel=null; return; }
-    const t = e.target.closest('.screen-fade');
-    if (!t) return;
-    panel = t;
-    const touch = e.touches[0];
-    sx = touch.clientX; sy = touch.clientY;
-    dragging = true; locked = null;
-    panel.style.transition = 'none';
-  }, {passive:true});
-  app.addEventListener('touchmove', (e)=>{
-    if (!dragging || !panel) return;
-    const touch = e.touches[0];
-    const dx = touch.clientX - sx;
-    const dy = touch.clientY - sy;
-    if (locked===null) locked = (Math.abs(dx) > Math.abs(dy)+4) ? 'x' : 'y';
-    if (locked==='x'){
-      panel.style.transform = `translateX(${dx}px)`;
-      panel.style.opacity = String(Math.max(.4, 1 - Math.abs(dx)/260));
-    }
-  }, {passive:true});
-  function release(e){
-    if (!dragging || !panel){ dragging=false; return; }
-    dragging = false;
-    const p = panel; panel = null;
-    if (locked!=='x'){ p.style.transform=''; p.style.opacity=''; locked=null; return; }
-    const touch = (e.changedTouches && e.changedTouches[0]) || {clientX:sx};
-    const dx = touch.clientX - sx;
-    p.style.transition = 'transform .22s cubic-bezier(.22,.61,.36,1), opacity .22s ease';
-    if (Math.abs(dx) > THRESHOLD && eligible()){
-      const goingToReminders = dx > 0 && state.screen==='home';
-      const goingHome = dx < 0 && state.screen==='reminders' && !state.reminderClassId;
-      if (goingToReminders || goingHome){
-        const exitX = dx > 0 ? window.innerWidth*0.5 : -window.innerWidth*0.5;
-        p.style.transform = `translateX(${exitX}px)`;
-        p.style.opacity = '0';
-        haptic(6);
-        setTimeout(()=>{
-          if (goingToReminders) goReminders('prev');
-          else if (goingHome) goHome('next');
-        }, 120);
-        locked = null;
-        return;
-      }
-    }
-    p.style.transform = 'translateX(0)';
-    p.style.opacity = '1';
-    locked = null;
-  }
-  app.addEventListener('touchend', release, {passive:true});
-  app.addEventListener('touchcancel', ()=>{
-    if (panel){ panel.style.transition='transform .2s ease, opacity .2s ease'; panel.style.transform=''; panel.style.opacity=''; }
-    dragging=false; panel=null; locked=null;
-  }, {passive:true});
+  // سوایپ بین صفحه‌ی کلاس‌ها و یادآوری‌ها — دقیقا با همان مکانیزم تقویم؛
+  // از چپ به راست بکشیم روی صفحه‌ی کلاس‌ها -> یادآوری، برعکسش هم برمی‌گردد
+  initSwipePaging(app, '.screen-fade', (dir)=>{
+    const onHome = state.screen==='home';
+    const onReminders = state.screen==='reminders' && !state.reminderClassId;
+    if (onHome && dir===-1) goReminders('prev');
+    else if (onReminders && dir===1) goHome('next');
+  }, ()=> state.screen==='home' || (state.screen==='reminders' && !state.reminderClassId));
 }
 function selectReminderDay(cid, day){
   haptic();
