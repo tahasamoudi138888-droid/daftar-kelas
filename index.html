@@ -658,9 +658,10 @@
   .next-class-pill.urgent{ animation: fadeSlideIn .35s ease both, urgentPulse 1.3s ease-in-out infinite; background:rgba(226,120,95,.18); color:#ffdcc9; }
   @keyframes urgentPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(226,120,95,.35); } 50%{ box-shadow:0 0 0 6px rgba(226,120,95,0); } }
 
-  .note-card{ background:var(--paper); border-radius:15px; padding:13px 15px; margin-bottom:10px; }
+  .note-card{ background:var(--paper); border-radius:15px; padding:13px 15px; margin-bottom:10px; transition:background-color .55s ease, box-shadow .55s ease; }
   .note-card.reminder-overdue{ border:1.5px solid var(--coral); }
   .note-card.reminder-overdue .nmeta span{ color:var(--coral); font-weight:700; }
+  .note-card.cal-event-flash{ background-color:var(--chalk-gold); box-shadow:0 0 0 3px var(--chalk-gold-ink,rgba(0,0,0,.12)) inset; }
   .note-card .ntxt{ font-size:13.5px; color:var(--ink); line-height:1.9; white-space:pre-wrap; }
   .note-card .nmeta{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
   .note-card .nmeta span{ font-size:11px; color:var(--ink-soft); }
@@ -1413,6 +1414,8 @@ function importBackup(inputEl){
 /* ============ app state ============ */
 const state = {
   screen:'home',        // home | class | student | attendanceHistory | spin | profile | reminders
+  screenAnimDir:null,    // for home<->reminders swipe entrance animation
+  calHighlightDay:null,  // day to briefly flash-highlight in the calendar "events" tab
   classTab:'students',  // students | homework | attendance
   classId:null,
   studentId:null,
@@ -2286,13 +2289,13 @@ function studentTotal(student){
 }
 
 /* ============ navigation ============ */
-function goHome(){ state.screen='home'; render(); }
+function goHome(dir){ state.screen='home'; state.screenAnimDir = dir || null; render(); }
 function openClass(id){ state.classId=id; state.classTab='students'; state.screen='class'; render(); }
 function openStudent(cid, sid){ state.classId=cid; state.studentId=sid; state.screen='student'; render(); }
 function openAttHistory(){ state.screen='attendanceHistory'; state.attHistDate=null; render(); }
 function goSpin(){ state.screen='spin'; render(); }
 function goProfile(){ state.screen='profile'; render(); }
-function goReminders(){ state.screen='reminders'; state.reminderClassId=null; render(); }
+function goReminders(dir){ state.screen='reminders'; state.reminderClassId=null; state.screenAnimDir = dir || null; render(); }
 
 /* ============ RENDER: master ============ */
 function render(){
@@ -2312,7 +2315,9 @@ function render(){
   else if (state.screen==='profile') html = renderProfileScreen();
   else if (state.screen==='reminders') html = renderRemindersScreen();
   else if (state.screen==='calendar') html = renderCalendarScreen();
-  app.innerHTML = `<div class="screen-fade">${html}</div>`;
+  const screenAnimCls = state.screenAnimDir ? ` swipe-enter-${state.screenAnimDir}` : '';
+  state.screenAnimDir = null;
+  app.innerHTML = `<div class="screen-fade${screenAnimCls}">${html}</div>`;
   window.scrollTo(0,0);
   renderClassAlert();
 }
@@ -3574,8 +3579,8 @@ function initScreenSwipeNav(){
         p.style.opacity = '0';
         haptic(6);
         setTimeout(()=>{
-          if (goingToReminders) goReminders();
-          else if (goingHome) goHome();
+          if (goingToReminders) goReminders('prev');
+          else if (goingHome) goHome('next');
         }, 120);
         locked = null;
         return;
@@ -3700,6 +3705,17 @@ function calSetTab(tab){
   state.calTab = tab;
   render();
 }
+// روی یک روز قرمز (تعطیل) توی تقویم می‌زنیم -> برو به تب رویدادها و برای چند لحظه رنگش را پررنگ/کم‌رنگ کن
+function calDayToEvents(d){
+  haptic();
+  state.calHighlightDay = d;
+  state.calTab = 'events';
+  render();
+  setTimeout(()=>{
+    const el = document.querySelector('.cal-event-flash');
+    if (el) el.classList.remove('cal-event-flash');
+  }, 1100);
+}
 function renderCalendarScreen(){
   const jy = state.calJY, jm = state.calJM;
   const animDir = state.calAnimDir;
@@ -3720,7 +3736,8 @@ function renderCalendarScreen(){
     const cls = ['cal-cell'];
     if (isToday) cls.push('today');
     else if (isHoliday) cls.push(isFri?'fri':'holiday');
-    cellsHtml += `<div class="${cls.join(' ')}">${d}${events.length?'<span class="dot"></span>':''}</div>`;
+    const dayClickAttr = isHoliday ? ` onclick="calDayToEvents(${d})" style="cursor:pointer;"` : '';
+    cellsHtml += `<div class="${cls.join(' ')}"${dayClickAttr}>${d}${events.length?'<span class="dot"></span>':''}</div>`;
   }
   const monthEvents = [];
   for (let d=1; d<=daysInMonth; d++){
@@ -3728,13 +3745,14 @@ function renderCalendarScreen(){
     holidaysForJalaliDate(jy, jm, d).forEach(title=>{ monthEvents.push({d, title, fri:wIdx===6}); });
   }
   const eventsHtml = monthEvents.map(ev=>`
-    <div class="note-card">
+    <div class="note-card${ev.d===state.calHighlightDay?' cal-event-flash':''}" data-cal-day="${ev.d}">
       <div class="cal-event-day">${ev.d}</div>
       <div style="flex:1;">
         <div class="ntxt">${escapeHtml(ev.title)}</div>
         <div class="nmeta" style="margin-top:4px;"><span style="color:var(--coral);font-weight:700;">${tr('cal_holiday_tag')}</span></div>
       </div>
     </div>`).join('');
+  state.calHighlightDay = null;
 
   // --- Gregorian grid (for the "میلادی" tab) ---
   const gy = state.calGY, gm = state.calGM;
