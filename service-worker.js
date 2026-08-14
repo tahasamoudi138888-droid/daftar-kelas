@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daftar-kelas-v14';
+const CACHE_NAME = 'daftar-kelas-v15';
 const ASSETS = [
   './',
   './index.html',
