@@ -1,0 +1,21 @@
+{
+  "name": "daftar-kelas",
+  "version": "21.1.1",
+  "private": true,
+  "scripts": {
+    "audit": "node scripts/audit-assets.mjs",
+    "test": "node scripts/audit-assets.mjs && node tests/run-tests.mjs && node --test --test-concurrency=1 tests/api-client.test.mjs tests/ui-actions.test.mjs tests/manager-auth.test.mjs tests/save-data.test.mjs tests/reliability.test.mjs tests/media-stream.test.mjs tests/manager-security-integration.test.mjs",
+    "test:browser": "node tests/browser-smoke.mjs",
+    "test:visual": "node tests/visual-regression.mjs",
+    "configure:cloud": "node scripts/configure-cloud-origin.mjs",
+    "test:manager-browser": "node tests/browser-manager.mjs",
+    "test:large-media": "node tests/browser-large-media.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "fake-indexeddb": "^6.2.5",
+    "pixelmatch": "^8.0.0",
+    "playwright": "^1.55.0",
+    "pngjs": "^7.0.0"
+  }
+}

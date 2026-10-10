@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>دفتر کلاس</title>
+<meta name="description" content="دفتر خصوصی معلم و پنل تجمیعی مدیر برای مدیریت کلاس، حضور، نمره و شعبه">
+<meta name="app-api-origin" content="">
+<meta name="application-name" content="دفتر کلاس">
+<meta name="format-detection" content="telephone=no">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self'; manifest-src 'self'; upgrade-insecure-requests">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="دفتر کلاس">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1f3a32">
+<link rel="stylesheet" href="assets/css/app.css">
+<link rel="stylesheet" href="assets/css/v18-polish.css">
+<link rel="stylesheet" href="assets/css/v19-experience.css">
+<link rel="stylesheet" href="assets/css/v19.2-coherence.css">
+<link rel="stylesheet" href="assets/css/v19.4-premium.css">
+
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="assets/js/pwa.js" defer></script>
+
+</head>
+<body>
+<div id="shell">
+  <div id="classAlertBadge" class="class-alert-badge" data-style="display:none;"></div>
+  <header class="topbar" id="topbar"></header>
+  <main id="app"></main>
+  <button class="fab" id="fabBtn" data-style="display:none;"></button>
+  <nav class="bottomnav" id="bottomnav"></nav>
+</div>
+<div id="modalRoot"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="status-chip" id="connectionStatus" role="status" aria-live="polite"><span class="dot"></span><span>آنلاین</span></div>
+<div class="app-lock" id="appLock" hidden aria-modal="true" role="dialog"></div>
+<div class="operation-progress" id="operationProgress" hidden role="status" aria-live="polite" aria-busy="true"><div class="progress-card"><div class="progress-ring" id="progressRing"><b id="progressPercent">0%</b></div><h3 id="progressTitle">در حال آماده‌سازی…</h3><p id="progressDetail"></p><button type="button" id="cancelHeavyOperation" class="btn btn-outline-dark" data-action="cancelHeavyOperation()" hidden>لغو عملیات</button></div></div>
+
+<script src="assets/js/crypto-core.js" defer></script>
+<script src="assets/js/zip.js" defer></script>
+<script src="assets/js/export-core.js" defer></script>
+<script src="assets/js/core.js" defer></script>
+<script src="assets/js/state.js" defer></script>
+<script src="assets/js/i18n.js" defer></script>
+<script src="assets/js/i18n-dictionaries.js" defer></script>
+<script src="assets/js/i18n-extensions.js" defer></script>
+<script src="assets/js/i18n-v138.js" defer></script>
+<script src="assets/js/i18n-v139.js" defer></script>
+<script src="assets/js/i18n-v140.js" defer></script>
+<script src="assets/js/i18n-v150.js" defer></script>
+<script src="assets/js/i18n-v151.js" defer></script>
+<script src="assets/js/i18n-v152.js" defer></script>
+<script src="assets/js/i18n-v153.js" defer></script>
+<script src="assets/js/i18n-v180.js" defer></script>
+<script src="assets/js/i18n-v190.js" defer></script>
+<script src="assets/js/i18n-v192.js" defer></script>
+<script src="assets/js/i18n-v194.js" defer></script>
+<script src="assets/js/ui.js" defer></script>
+<script src="assets/js/api-client.js" defer></script>
+<script src="assets/js/health-center.js" defer></script>
+<script src="assets/js/widgets.js" defer></script>
+<script src="assets/js/experience-v194.js" defer></script>
+<script src="assets/js/widgets-v18.js" defer></script>
+<script src="assets/js/experience-v19.js" defer></script>
+<script src="assets/js/class-management.js" defer></script>
+<script src="assets/js/reliability.js" defer></script>
+<script src="assets/js/textbooks.js" defer></script>
+<script src="assets/js/listening.js" defer></script>
+<script src="assets/js/backup.js" defer></script>
+<script src="assets/js/students.js" defer></script>
+<script src="assets/js/homework.js" defer></script>
+<script src="assets/js/attendance.js" defer></script>
+<script src="assets/js/student-detail.js" defer></script>
+<script src="assets/js/spin.js" defer></script>
+<script src="assets/js/reminders.js" defer></script>
+<script src="assets/js/calendar.js" defer></script>
+<script src="assets/js/profile.js" defer></script>
+<script src="assets/js/device.js" defer></script>
+<script src="assets/js/security.js" defer></script>
+<script src="assets/js/settings.js" defer></script>
+<script src="assets/js/profile-edit.js" defer></script>
+<script src="assets/js/reports.js" defer></script>
+<script src="assets/js/cloud-sync.js" defer></script>
+<script src="assets/js/manager-sharing.js" defer></script>
+<script src="assets/js/role-gateway.js" defer></script>
+<script src="assets/js/contact-validation.js" defer></script>
+<script src="assets/js/manager-dashboard.js" defer></script>
+<script src="assets/js/account-security.js" defer></script>
+<script src="assets/js/manager-workbench.js" defer></script>
+<script src="assets/js/manager-directory.js" defer></script>
+<script src="assets/js/manager-personal.js" defer></script>
+<script src="assets/js/app.js" defer></script>
+
+</body>
+</html>

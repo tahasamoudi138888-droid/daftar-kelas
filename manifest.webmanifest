@@ -1,0 +1,25 @@
+{
+  "id": "./",
+  "name": "دفتر کلاس",
+  "short_name": "دفتر کلاس",
+  "description": "دفتر خصوصی معلم و پنل تجمیعی مدیر برای کلاس، حضور، نمره، شعبه و یادآوری",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f4ecd9",
+  "theme_color": "#1f3a32",
+  "categories": ["education", "productivity"],
+  "shortcuts": [
+    {"name":"کلاس‌ها","short_name":"کلاس‌ها","url":"./?screen=home","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"}]},
+    {"name":"یادآوری‌ها","short_name":"یادآوری","url":"./?screen=reminders","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"}]},
+    {"name":"پرسش کلاسی","short_name":"پرسش","url":"./?screen=spin","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"}]}
+  ],
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
+  ]
+}

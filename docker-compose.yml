@@ -1,0 +1,77 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: daftar
+      POSTGRES_USER: daftar
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?copy .env.example to .env and set a strong password}
+    volumes:
+      - daftar_postgres:/var/lib/postgresql/data
+      - ./server/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U daftar -d daftar"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  server:
+    build: ./server
+    restart: unless-stopped
+    env_file: ./server/.env
+    environment:
+      DATABASE_URL: postgres://daftar:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in the root .env file}@postgres:5432/daftar
+      TRUST_PROXY: "true"
+      NODE_ENV: production
+      AUTO_MIGRATE: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - daftar_backups:/backup-status:ro
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/ready >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
+    volumes:
+      - ./server/Caddyfile:/etc/caddy/Caddyfile:ro
+      - daftar_caddy_data:/data
+      - daftar_caddy_config:/config
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      server:
+        condition: service_healthy
+  backup:
+    build:
+      context: ./server
+      dockerfile: Backup.Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://daftar:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in the root .env file}@postgres:5432/daftar
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
+      AWS_ACCESS_KEY_ID: ${BACKUP_AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${BACKUP_AWS_SECRET_ACCESS_KEY:-}
+      RUN_RESTORE_DRILL: ${RUN_RESTORE_DRILL:-false}
+    volumes:
+      - daftar_backups:/backups
+    entrypoint: ["/bin/sh","-c"]
+    command: ["while true; do /usr/local/bin/backup.sh; sleep 86400; done"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+volumes:
+  daftar_postgres:
+  daftar_caddy_data:
+  daftar_caddy_config:
+  daftar_backups:
